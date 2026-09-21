@@ -1,22 +1,22 @@
 package game
 
-import rl "vendor:raylib"
-import "../scene"
-import "../stress"
-import "../perf"
-import "../cull"
-import "../lod"
-import "../render"
-import "../physics"
-import "../state"
-import "../input"
-import "../player"
 import "../audio"
-import "../ui"
+import "../cull"
+import "../input"
+import "../lod"
 import obj "../object"
+import "../perf"
+import "../player"
+import "../render"
+import "../scene"
+import "../dynamics"
+import "../state"
+import "../stress"
+import "../ui"
 import "core:fmt"
 import "core:math/linalg"
 import "core:time"
+import rl "vendor:raylib"
 
 SPIN_SPEED :: 1.2
 CAMERA_FOV :: 45.0
@@ -26,10 +26,7 @@ JUMP_BEEP_SECS :: 0.12
 CAMERA_OFFSET :: linalg.Vector3f32{9, 8, 9}
 GROUND_SIZE :: f32(200)
 GAME_TITLE :: "ODIN ENGINE"
-MENU_LINES := [2]string{
-	"WASD to move, SPACE to jump, P to pause",
-	"press ENTER to start",
-}
+MENU_LINES := [2]string{"WASD to move, SPACE to jump, P to pause", "press ENTER to start"}
 PAUSE_HINT :: "press P to resume"
 
 Game :: struct {
@@ -52,25 +49,27 @@ Game :: struct {
 	machine:    state.Machine,
 	actions:    input.Action_Map,
 	hero:       player.Player,
+	phys:       dynamics.Physics,
+	contacts:   int,
 }
 
 make_game :: proc(stress_count: int, seed: u64, culling, instancing: bool) -> Game {
-	g := Game{
+	g := Game {
 		scene = scene.make_scene(),
-		camera = rl.Camera3D{
-			position   = {60, 40, 60},
-			target     = {0, 2, 0},
-			up         = {0, 1, 0},
-			fovy       = CAMERA_FOV,
+		camera = rl.Camera3D {
+			position = {60, 40, 60},
+			target = {0, 2, 0},
+			up = {0, 1, 0},
+			fovy = CAMERA_FOV,
 			projection = .PERSPECTIVE,
 		},
-		meter      = perf.make_meter(),
-		culling    = culling,
+		meter = perf.make_meter(),
+		culling = culling,
 		instancing = instancing,
-		bus        = audio.make_bus(),
-		machine    = state.make_machine(),
-		actions    = input.make_action_map(),
-		hero       = player.make_player({0, player.HALF_HEIGHT, 0}),
+		bus = audio.make_bus(),
+		machine = state.make_machine(),
+		actions = input.make_action_map(),
+		hero = player.make_player({0, player.HALF_HEIGHT, 0}),
 	}
 	if stress_count > 0 {
 		stress.generate(&g.scene, stress_count, seed)
@@ -78,15 +77,27 @@ make_game :: proc(stress_count: int, seed: u64, culling, instancing: bool) -> Ga
 		box := scene.spawn(&g.scene, "box")
 		obj.set_mesh(box, obj.Mesh_Component{color = rl.DARKBLUE, size = {1, 1, 1}})
 		obj.set_health(box, obj.Health_Component{current = 100, max = 100})
-		box.body = obj.Rigid_Body{velocity = {0, 0, 0}, mass = 1}
-		box.collider = obj.Collider{half_extents = {0.5, 0.5, 0.5}}
+		box.body = obj.Rigid_Body {
+			velocity = {0, 0, 0},
+			mass     = 1,
+		}
+		box.collider = obj.Collider {
+			half_extents = {0.5, 0.5, 0.5},
+		}
 	}
+	ground := scene.spawn(&g.scene, "ground")
+	ground.transform.position = {0, -0.6, 0}
+	ground.collider = obj.Collider {
+		half_extents = {100, 0.5, 100},
+	}
+	g.phys = dynamics.build(&g.scene, {0, -9.81, 0})
 	return g
 }
 
 destroy_game :: proc(g: ^Game) {
 	input.destroy_action_map(&g.actions)
 	perf.destroy_meter(&g.meter)
+	dynamics.destroy(&g.phys)
 	scene.destroy_scene(&g.scene)
 	if g.assets_ok {
 		rl.CloseAudioDevice()
@@ -102,7 +113,7 @@ ensure_assets :: proc(g: ^Game) {
 	g.gltf_model = rl.LoadModel("assets/models/triangle.gltf")
 	rl.InitAudioDevice()
 	frames := audio.sine_frames(JUMP_BEEP_HZ, JUMP_BEEP_SECS, context.temp_allocator)
-	wave := rl.Wave{
+	wave := rl.Wave {
 		frameCount = u32(len(frames)),
 		sampleRate = audio.SAMPLE_RATE,
 		sampleSize = 32,
@@ -160,13 +171,9 @@ update :: proc(g: ^Game, dt: f32) {
 	g.camera.target = g.hero.position
 	g.camera.position = g.hero.position + CAMERA_OFFSET
 	g.angle += SPIN_SPEED * dt
-	for &o in g.scene.objects {
-		b, ok := &o.body.?
-		if !ok || !o.active {
-			continue
-		}
-		physics.integrate(&o.transform.position, &b.velocity, physics.GRAVITY * 0, dt)
-	}
+	contacts := dynamics.step(&g.phys, &g.scene, dt)
+	g.contacts = len(contacts)
+	delete(contacts)
 	g.meter.update_ms = time.duration_milliseconds(time.tick_since(start))
 }
 
@@ -212,10 +219,15 @@ draw_shape :: proc(g: ^Game, o: ^obj.Game_Object) {
 	level := lod.select(dist)
 	#partial switch m.shape {
 	case .Box:
-		if !g.instancing {
-			rl.DrawCube(o.transform.position, m.size.x, m.size.y, m.size.z, m.color)
-			g.draw_calls += 1
+		// boxes can rotate now, so draw them with the whole matrix.
+		mat := g.cube_mat
+		mat.maps[rl.MaterialMapIndex.ALBEDO].color = m.color
+		w, wok := scene.world_matrix(&g.scene, o.id)
+		if !wok {
+			w = obj.local_matrix(o.transform)
 		}
+		rl.DrawMesh(g.cube_mesh, mat, transmute(rl.Matrix)w)
+		g.draw_calls += 1
 	case .Sphere:
 		if level == .Full {
 			rl.DrawSphereEx(o.transform.position, m.size.x / 2, 12, 12, m.color)

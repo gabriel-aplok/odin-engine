@@ -18,7 +18,7 @@ make_player :: proc(spawn: linalg.Vector3f32) -> Player {
 	return Player{position = spawn, grounded = true}
 }
 
-// move is a normalized XZ direction. jump is true on the press frame.
+// move is xz direction, already normalized. jump is only true on the press frame.
 step :: proc(p: ^Player, move: linalg.Vector2f32, jump: bool, dt: f32) -> bool {
 	jumped := false
 	p.velocity.x = move.x * MOVE_SPEED

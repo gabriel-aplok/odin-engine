@@ -2,7 +2,7 @@ package audio
 
 SAMPLE_RATE :: 22050
 
-// Mono 32-bit float sine frames. Pure math, no device needed.
+// mono sine frames as f32s. just math, no sound card needed.
 sine_frames :: proc(freq_hz, seconds: f32, allocator := context.allocator) -> []f32 {
 	count := int(SAMPLE_RATE * seconds)
 	frames := make([]f32, count, allocator)
