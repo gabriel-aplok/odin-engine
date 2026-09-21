@@ -14,7 +14,7 @@ test_collect_boxes_groups_and_skips :: proc(t: ^testing.T) {
 	for &o in s.objects {
 		append(&ptrs, &o)
 	}
-	batches := collect_boxes(ptrs[:])
+	batches := collect_boxes(ptrs[:], 1.0)
 	defer destroy_batches(&batches)
 	total := 0
 	for _, list in batches {
@@ -38,7 +38,7 @@ test_collect_boxes_respects_visible_subset :: proc(t: ^testing.T) {
 		}
 		append(&ptrs, &o)
 	}
-	batches := collect_boxes(ptrs[:])
+	batches := collect_boxes(ptrs[:], 1.0)
 	defer destroy_batches(&batches)
 	total := 0
 	for _, list in batches {
@@ -63,7 +63,7 @@ test_instance_matrix_carries_position :: proc(t: ^testing.T) {
 			box_size = m.size
 		}
 	}
-	batches := collect_boxes(ptrs[:])
+	batches := collect_boxes(ptrs[:], 1.0)
 	defer destroy_batches(&batches)
 	matched := false
 	for key, list in batches {

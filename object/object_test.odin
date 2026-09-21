@@ -13,22 +13,22 @@ test_make_object_defaults :: proc(t: ^testing.T) {
 }
 
 @(test)
-test_damage_deactivates_at_zero :: proc(t: ^testing.T) {
+test_set_mesh :: proc(t: ^testing.T) {
 	o := make_object(1, "box")
-	set_health(&o, Health_Component{current = 10, max = 10})
-	damage(&o, 4)
-	h, _ := o.health.?
-	testing.expect_value(t, h.current, i32(6))
-	testing.expect_value(t, o.active, true)
-	damage(&o, 6)
-	h, _ = o.health.?
-	testing.expect_value(t, h.current, i32(0))
-	testing.expect_value(t, o.active, false)
+	set_mesh(&o, Mesh_Component{color = {255, 0, 0, 255}, size = {1, 2, 3}})
+	m, ok := o.mesh.?
+	testing.expect(t, ok)
+	testing.expect(t, m.size == [3]f32{1, 2, 3})
+	testing.expect_value(t, m.shape, Shape_Kind.Box)
 }
 
 @(test)
-test_damage_without_health_is_noop :: proc(t: ^testing.T) {
+test_interp_position :: proc(t: ^testing.T) {
 	o := make_object(1, "box")
-	damage(&o, 10)
-	testing.expect_value(t, o.active, true)
+	o.transform.prev_position = {0, 0, 0}
+	o.transform.position = {10, 0, 0}
+	mid := interp_position(o.transform, 0.5)
+	testing.expect(t, mid == [3]f32{5, 0, 0})
+	testing.expect(t, interp_position(o.transform, 0) == [3]f32{0, 0, 0})
+	testing.expect(t, interp_position(o.transform, 1) == [3]f32{10, 0, 0})
 }

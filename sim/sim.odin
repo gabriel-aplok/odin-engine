@@ -18,6 +18,8 @@ Contact :: struct {
 make_world :: proc(gravity: linalg.Vector3f32) -> World {
 	def := b3.DefaultWorldDef()
 	def.gravity = gravity
+	// one thread so the same steps always give the same spots.
+	def.workerCount = 1
 	return World{id = b3.CreateWorld(def), bodies = make(map[b3.BodyId]u64)}
 }
 

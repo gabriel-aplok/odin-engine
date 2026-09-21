@@ -10,6 +10,7 @@ Batch_Key :: struct {
 
 collect_boxes :: proc(
 	objects: []^obj.Game_Object,
+	alpha: f32,
 	allocator := context.allocator,
 ) -> map[Batch_Key][dynamic]rl.Matrix {
 	batches := make(map[Batch_Key][dynamic]rl.Matrix, allocator)
@@ -30,8 +31,10 @@ collect_boxes :: proc(
 			list = make([dynamic]rl.Matrix, allocator)
 		}
 		// full local transform. linalg memory matches raylib memory
-		// so the transmute is fine.
-		append(&list, transmute(rl.Matrix)obj.local_matrix(o.transform))
+		// so the transmute is fine. uses the between-frames spot.
+		t := o.transform
+		t.position = obj.interp_position(o.transform, alpha)
+		append(&list, transmute(rl.Matrix)obj.local_matrix(t))
 		batches[key] = list
 	}
 	return batches

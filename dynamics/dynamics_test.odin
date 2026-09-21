@@ -32,12 +32,17 @@ test_build_steps_and_syncs :: proc(t: ^testing.T) {
 	p := build(&s, DEFAULT_GRAVITY)
 	defer destroy(&p)
 	testing.expect_value(t, len(p.world.bodies), 2)
+	box, _ := scene.find_by_id(&s, 2)
+	start_y := box.transform.position.y
+	contacts := step(&p, &s, DT)
+	delete(contacts)
+	// old spot stashed before the step ran.
+	testing.expect_value(t, box.transform.prev_position.y, start_y)
+	testing.expect(t, box.transform.position.y < start_y)
 	for _ in 0 ..< 300 {
 		contacts := step(&p, &s, DT)
 		delete(contacts)
 	}
-	box, ok := scene.find_by_id(&s, 2)
-	testing.expect(t, ok)
 	testing.expect(t, box.transform.position.y > 0.4 && box.transform.position.y < 0.6)
 	ground, _ := scene.find_by_id(&s, 1)
 	testing.expect_value(t, ground.transform.position.y, f32(-0.5))
@@ -62,4 +67,30 @@ test_dispatch_routes_contacts :: proc(t: ^testing.T) {
 		t,
 		(hit[0] == 1 && hit[1] == 2) || (hit[0] == 2 && hit[1] == 1),
 	)
+}
+
+@(test)
+test_same_seed_same_replay :: proc(t: ^testing.T) {
+	run_hash :: proc(offset: f32) -> u64 {
+		s := scene.make_scene()
+		defer scene.destroy_scene(&s)
+		ground := scene.spawn(&s, "ground")
+		ground.transform.position = {0, -0.5, 0}
+		ground.collider = obj.Collider{half_extents = {50, 0.5, 50}}
+		for i in 0 ..< 50 {
+			b := scene.spawn(&s, "box")
+			b.transform.position = {offset + f32(i % 10), 5 + f32(i / 10), 0}
+			b.collider = obj.Collider{half_extents = {0.5, 0.5, 0.5}}
+			b.body = obj.Rigid_Body{kind = .Dynamic}
+		}
+		p := build(&s, DEFAULT_GRAVITY)
+		defer destroy(&p)
+		for _ in 0 ..< 120 {
+			contacts := step(&p, &s, DT)
+			delete(contacts)
+		}
+		return hash_scene(&s)
+	}
+	testing.expect_value(t, run_hash(0), run_hash(0))
+	testing.expect(t, run_hash(0) != run_hash(100))
 }

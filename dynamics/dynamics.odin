@@ -59,8 +59,12 @@ register :: proc(p: ^Physics, o: ^obj.Game_Object, c: obj.Collider, kind: obj.Bo
 }
 
 // one step, then copies positions back to the objects.
+// stashes the old spot first so draw can sit between frames.
 // gives you the contacts, you delete the array.
 step :: proc(p: ^Physics, s: ^scene.Scene, dt: f32) -> [dynamic]sim.Contact {
+	for &o in s.objects {
+		o.transform.prev_position = o.transform.position
+	}
 	sim.step(&p.world, dt)
 	for body, id in p.world.bodies {
 		o, ok := scene.find_by_id(s, id)
@@ -83,4 +87,25 @@ dispatch :: proc(p: ^Physics, s: ^scene.Scene, dt: f32, handler: Contact_Handler
 
 destroy :: proc(p: ^Physics) {
 	sim.destroy_world(&p.world)
+}
+
+// fnv hash over every object spot. same scene plus same steps
+// gives the same number. replays compare against it.
+hash_scene :: proc(s: ^scene.Scene) -> u64 {
+	h := u64(14695981039346656037)
+	mix := proc(h, v: u64) -> u64 {
+		return (h ~ v) * 1099511628211
+	}
+	for &o in s.objects {
+		h = mix(h, o.id)
+		h = mix(h, u64(transmute(u32)o.transform.position.x))
+		h = mix(h, u64(transmute(u32)o.transform.position.y))
+		h = mix(h, u64(transmute(u32)o.transform.position.z))
+		rot := transmute([4]u32)o.transform.rotation
+		h = mix(h, u64(rot[0]))
+		h = mix(h, u64(rot[1]))
+		h = mix(h, u64(rot[2]))
+		h = mix(h, u64(rot[3]))
+	}
+	return h
 }
