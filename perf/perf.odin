@@ -14,10 +14,11 @@ Meter :: struct {
 	update_ms: f64,
 	draw_ms:   f64,
 	rows:      [dynamic]string,
+	zones:     map[string]Zone,
 }
 
 make_meter :: proc() -> Meter {
-	return Meter{rows = make([dynamic]string)}
+	return Meter{rows = make([dynamic]string), zones = make(map[string]Zone)}
 }
 
 destroy_meter :: proc(m: ^Meter) {
@@ -25,6 +26,7 @@ destroy_meter :: proc(m: ^Meter) {
 		delete(r)
 	}
 	delete(m.rows)
+	delete(m.zones)
 }
 
 push_frame :: proc(m: ^Meter, dt: f32) {
