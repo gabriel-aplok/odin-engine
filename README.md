@@ -43,7 +43,7 @@ A 3D game engine foundation in Odin. It uses `vendor:raylib` for the window, inp
 2. Run each package in the list below to test the full project.
 3. If a test fails, it prints the file, the line, and the failed condition.
 
-Tested packages: `app`, `object`, `scene`, `input`, `physics`, `sim`, `dynamics`, `assets`, `audio`, `persist`, `editor`, `render`, `gltf`, `material`, `stress`, `perf`, `cull`, `lod`, `stream`, `state`, `player`, `ui`.
+Tested packages: `app`, `object`, `scene`, `input`, `physics`, `sim`, `dynamics`, `assets`, `audio`, `persist`, `editor`, `render`, `gltf`, `material`, `stress`, `perf`, `cull`, `lod`, `stream`, `state`, `player`, `ui`, `memory`, `log`, `config`, `events`.
 
 ## Debug in VSCode
 
@@ -53,6 +53,7 @@ Tested packages: `app`, `object`, `scene`, `input`, `physics`, `sim`, `dynamics`
 
 ## Flags
 
+* `--config=PATH` loads a JSON config file. CLI flags win over the file.
 * `--stress=N` spawns N test objects.
 * `--seed=N` sets the scene generator seed.
 * `--ref=PATH` writes a reference scene file and stops.
@@ -67,6 +68,6 @@ things simple. components are just data, systems do the work.
 * Entity is `Entity` (same as `Game_Object`, pick one).
 * EntityManager.CreateEntity is `scene.create_entity`.
 * EntityManager.DestroyEntity is `scene.destroy_entity`.
-* IComponentData structs are `Transform`, `Mesh_Component`, `Health_Component`, `Rigid_Body`, `Collider`.
+* IComponentData structs are `Transform`, `Mesh_Component`, `Rigid_Body`, `Collider`.
 * Systems are packages: `dynamics` steps physics, `render` batches draws, `cull` skips off-screen objects, `lod` swaps detail.
 * A World is a `scene.Scene` plus a `dynamics.Physics`.

@@ -1,7 +1,12 @@
 *.exe
 *.pdb
 *.csv
+*.log
 ref_scene.json
 test_asset.bin
 test_scene.json
 test_perf.csv
+test_log.txt
+test_config.json
+test_broken.json
+test_unknown.json
