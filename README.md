@@ -43,34 +43,13 @@ A 3D game engine foundation in Odin. It uses `vendor:raylib` for the window, inp
 2. Run each package in the list below to test the full project.
 3. If a test fails, it prints the file, the line, and the failed condition.
 
-Tested packages: `app`, `object`, `scene`, `input`, `physics`, `assets`, `audio`, `persist`, `editor`, `render`, `gltf`, `material`, `stress`, `perf`, `cull`, `lod`, `stream`.
+Tested packages: `app`, `object`, `scene`, `input`, `physics`, `sim`, `dynamics`, `assets`, `audio`, `persist`, `editor`, `render`, `gltf`, `material`, `stress`, `perf`, `cull`, `lod`, `stream`, `state`, `player`, `ui`.
 
 ## Debug in VSCode
 
 1. Install the extensions that VSCode suggests for this folder.
 2. Press F5 and select `Debug game.exe`.
 3. The launch task builds `game.exe` before the debugger starts.
-
-## Layout
-
-* `app` runs the window and the fixed-step game loop.
-* `game` holds game state, the camera, and the draw code.
-* `scene` stores game objects and parent links.
-* `object` defines game objects, transforms, and components.
-* `stress` builds seeded test scenes.
-* `perf` records frame times and writes CSV files.
-* `cull` skips objects outside the camera view.
-* `render` groups boxes into instanced draw batches.
-* `lod` selects full or reduced detail by camera distance.
-* `stream` queues asset loads under a memory budget.
-* `physics` integrates bodies and finds AABB overlap pairs.
-* `assets` loads files from disk behind handles.
-* `material` loads the lit shader pair.
-* `gltf` reads glTF files through `vendor:cgltf`.
-* `audio` holds master, music, and effects gains.
-* `persist` saves and loads scenes as JSON.
-* `editor` holds the orbit camera and the scene inspector.
-* `input` maps keys to game actions.
 
 ## Flags
 
@@ -79,3 +58,15 @@ Tested packages: `app`, `object`, `scene`, `input`, `physics`, `assets`, `audio`
 * `--ref=PATH` writes a reference scene file and stops.
 * `--no-cull` disables frustum culling.
 * `--no-instancing` disables instanced drawing.
+
+## Coming from Unity DOTS
+
+i made the ecs work like unity dots because i know it and it keeps
+things simple. components are just data, systems do the work.
+
+* Entity is `Entity` (same as `Game_Object`, pick one).
+* EntityManager.CreateEntity is `scene.create_entity`.
+* EntityManager.DestroyEntity is `scene.destroy_entity`.
+* IComponentData structs are `Transform`, `Mesh_Component`, `Health_Component`, `Rigid_Body`, `Collider`.
+* Systems are packages: `dynamics` steps physics, `render` batches draws, `cull` skips off-screen objects, `lod` swaps detail.
+* A World is a `scene.Scene` plus a `dynamics.Physics`.
