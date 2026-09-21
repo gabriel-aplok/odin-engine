@@ -9,7 +9,7 @@ MAX_SIZE :: f32(2.0)
 
 PALETTE := [4][4]u8{{38, 84, 124, 255}, {199, 125, 45, 255}, {110, 166, 130, 255}, {180, 70, 70, 255}}
 
-// Seeded xorshift64 star. Deterministic across runs and platforms.
+// tiny seeded rng. same seed, same scene, every time.
 next_unit :: proc(state: ^u64) -> f32 {
 	state^ = state^ ~ (state^ >> 12)
 	state^ = state^ ~ (state^ << 25)

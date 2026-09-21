@@ -11,7 +11,7 @@ test_budget_blocks_and_evicts :: proc(t: ^testing.T) {
 	request(&s, "b", 60, 1)
 	testing.expect_value(t, pump(&s), 1)
 	testing.expect_value(t, s.used_bytes, 60)
-	// Same path twice queues once.
+	// asking twice for the same path only queues it once.
 	request(&s, "b", 60, 2)
 	testing.expect_value(t, len(s.queue), 1)
 	visible := map[string]bool{"a" = false, "b" = true}

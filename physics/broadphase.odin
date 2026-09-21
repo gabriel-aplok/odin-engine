@@ -7,15 +7,15 @@ Body_Input :: struct {
 	max: linalg.Vector3f32,
 }
 
-// Sweep and prune on X axis. Returns index pairs whose AABBs overlap.
+// sweep and prune on x. gives back index pairs that overlap.
 sweep_pairs :: proc(bodies: []Body_Input, allocator := context.allocator) -> [][2]int {
 	order := make([]int, len(bodies), allocator)
 	defer delete(order, allocator)
 	for i in 0 ..< len(bodies) {
 		order[i] = i
 	}
-	// Insertion sort by min.x. Bodies stay near their previous order
-	// frame to frame, so this is near linear in practice.
+	// insertion sort on min.x. bodies barely move between frames
+	// so this is basically linear.
 	for i in 1 ..< len(order) {
 		j := i
 		for j > 0 && bodies[order[j]].min.x < bodies[order[j - 1]].min.x {

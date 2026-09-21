@@ -1,14 +1,17 @@
 package render
 
-import rl "vendor:raylib"
 import obj "../object"
+import rl "vendor:raylib"
 
 Batch_Key :: struct {
 	color: rl.Color,
 	size:  [3]f32,
 }
 
-collect_boxes :: proc(objects: []^obj.Game_Object, allocator := context.allocator) -> map[Batch_Key][dynamic]rl.Matrix {
+collect_boxes :: proc(
+	objects: []^obj.Game_Object,
+	allocator := context.allocator,
+) -> map[Batch_Key][dynamic]rl.Matrix {
 	batches := make(map[Batch_Key][dynamic]rl.Matrix, allocator)
 	for o in objects {
 		if !o.active {
@@ -18,21 +21,17 @@ collect_boxes :: proc(objects: []^obj.Game_Object, allocator := context.allocato
 		if !ok || m.shape != .Box {
 			continue
 		}
-		key := Batch_Key{color = m.color, size = m.size}
+		key := Batch_Key {
+			color = m.color,
+			size  = m.size,
+		}
 		list, found := batches[key]
 		if !found {
 			list = make([dynamic]rl.Matrix, allocator)
 		}
-		p := o.transform.position
-		append(
-			&list,
-			rl.Matrix{
-				m.size.x, 0, 0, 0,
-				0, m.size.y, 0, 0,
-				0, 0, m.size.z, 0,
-				p.x, p.y, p.z, 1,
-			},
-		)
+		// full local transform. linalg memory matches raylib memory
+		// so the transmute is fine.
+		append(&list, transmute(rl.Matrix)obj.local_matrix(o.transform))
 		batches[key] = list
 	}
 	return batches

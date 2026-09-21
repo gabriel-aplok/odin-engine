@@ -3,6 +3,9 @@ package object
 import "core:math/linalg"
 import rl "vendor:raylib"
 
+// entity is the dots word for game object. same thing, pick the one you like.
+Entity :: Game_Object
+
 Transform :: struct {
 	position: linalg.Vector3f32,
 	rotation: linalg.Quaternionf32,
@@ -27,9 +30,20 @@ Health_Component :: struct {
 	max:     i32,
 }
 
+Body_Kind :: enum {
+	Dynamic,
+	Static,
+	Kinematic,
+}
+
 Rigid_Body :: struct {
-	velocity: linalg.Vector3f32,
-	mass:     f32,
+	velocity:       linalg.Vector3f32,
+	mass:           f32,
+	kind:           Body_Kind,
+	gravity_scale:  f32,
+	density:        f32,
+	friction:       f32,
+	restitution:    f32,
 }
 
 Collider :: struct {

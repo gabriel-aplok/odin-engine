@@ -30,6 +30,10 @@ spawn :: proc(s: ^Scene, name: string) -> ^obj.Game_Object {
 	return &s.objects[len(s.objects) - 1]
 }
 
+// dots names for the same procs. spawn and remove work too.
+create_entity :: spawn
+destroy_entity :: remove_by_id
+
 find_by_id :: proc(s: ^Scene, id: u64) -> (^obj.Game_Object, bool) {
 	for &o in s.objects {
 		if o.id == id {
