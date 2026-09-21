@@ -37,6 +37,7 @@ title_screen :: proc(title: string, lines: []string) {
 	}
 }
 
-pause_overlay :: proc(hint: string) {
-	rl.DrawText(fmt.ctprintf("PAUSED - %s", hint), 250, 200, BODY_SIZE, rl.MAROON)
+overlay :: proc(title, hint: string) {
+	rl.DrawText(fmt.ctprintf("%s", title), 250, 160, TITLE_SIZE, rl.DARKGRAY)
+	rl.DrawText(fmt.ctprintf("%s", hint), 250, 220, BODY_SIZE, rl.MAROON)
 }
