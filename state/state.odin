@@ -1,31 +1,17 @@
 package state
 
-State :: enum {
-	Menu,
-	Playing,
-	Paused,
-}
-
 Machine :: struct {
-	current: State,
+	current: string,
 }
 
 make_machine :: proc() -> Machine {
-	return Machine{current = .Menu}
+	return Machine{}
 }
 
-to_playing :: proc(m: ^Machine) {
-	m.current = .Playing
+set :: proc(m: ^Machine, s: string) {
+	m.current = s
 }
 
-toggle_pause :: proc(m: ^Machine) {
-	if m.current == .Playing {
-		m.current = .Paused
-	} else if m.current == .Paused {
-		m.current = .Playing
-	}
-}
-
-quit_to_menu :: proc(m: ^Machine) {
-	m.current = .Menu
+is :: proc(m: ^Machine, s: string) -> bool {
+	return m.current == s
 }

@@ -9,18 +9,20 @@ GROUND_Y :: f32(0)
 HALF_HEIGHT :: f32(0.5)
 
 Player :: struct {
-	position: linalg.Vector3f32,
-	velocity: linalg.Vector3f32,
-	grounded: bool,
+	position:      linalg.Vector3f32,
+	prev_position: linalg.Vector3f32,
+	velocity:      linalg.Vector3f32,
+	grounded:      bool,
 }
 
 make_player :: proc(spawn: linalg.Vector3f32) -> Player {
-	return Player{position = spawn, grounded = true}
+	return Player{position = spawn, prev_position = spawn, grounded = true}
 }
 
 // move is xz direction, already normalized. jump is only true on the press frame.
 step :: proc(p: ^Player, move: linalg.Vector2f32, jump: bool, dt: f32) -> bool {
 	jumped := false
+	p.prev_position = p.position
 	p.velocity.x = move.x * MOVE_SPEED
 	p.velocity.z = move.y * MOVE_SPEED
 	if jump && p.grounded {
