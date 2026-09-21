@@ -1,0 +1,16 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Debug game.exe",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}\\game.exe",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}",
+			"environment": [],
+			"preLaunchTask": "odin: build"
+		}
+	]
+}

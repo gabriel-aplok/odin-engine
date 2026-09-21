@@ -1,0 +1,87 @@
+package object
+
+import "core:math/linalg"
+import rl "vendor:raylib"
+
+Transform :: struct {
+	position: linalg.Vector3f32,
+	rotation: linalg.Quaternionf32,
+	scale:    linalg.Vector3f32,
+	parent:   Maybe(u64),
+}
+
+Shape_Kind :: enum {
+	Box,
+	Sphere,
+	Gltf,
+}
+
+Mesh_Component :: struct {
+	color: rl.Color,
+	size:  linalg.Vector3f32,
+	shape: Shape_Kind,
+}
+
+Health_Component :: struct {
+	current: i32,
+	max:     i32,
+}
+
+Rigid_Body :: struct {
+	velocity: linalg.Vector3f32,
+	mass:     f32,
+}
+
+Collider :: struct {
+	half_extents: linalg.Vector3f32,
+}
+
+Game_Object :: struct {
+	id:        u64,
+	name:      string,
+	active:    bool,
+	transform: Transform,
+	mesh:      Maybe(Mesh_Component),
+	health:    Maybe(Health_Component),
+	body:      Maybe(Rigid_Body),
+	collider:  Maybe(Collider),
+}
+
+make_object :: proc(id: u64, name: string) -> Game_Object {
+	return Game_Object {
+		id = id,
+		name = name,
+		active = true,
+		transform = Transform {
+			position = {0, 0, 0},
+			rotation = linalg.QUATERNIONF32_IDENTITY,
+			scale = {1, 1, 1},
+		},
+	}
+}
+
+set_mesh :: proc(obj: ^Game_Object, mesh: Mesh_Component) {
+	obj.mesh = mesh
+}
+
+set_health :: proc(obj: ^Game_Object, health: Health_Component) {
+	obj.health = health
+}
+
+damage :: proc(obj: ^Game_Object, amount: i32) {
+	h, ok := &obj.health.?
+	if !ok {
+		return
+	}
+	h.current = max(0, h.current - amount)
+	if h.current == 0 {
+		obj.active = false
+	}
+}
+
+local_matrix :: proc(t: Transform) -> linalg.Matrix4f32 {
+	rot := linalg.matrix4_from_quaternion_f32(t.rotation)
+	s := linalg.matrix4_scale_f32(t.scale)
+	tr := linalg.matrix4_translate_f32(t.position)
+	return tr * rot * s
+}
